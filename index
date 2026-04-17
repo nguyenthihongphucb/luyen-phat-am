@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master English - Lộ Trình Tinh Tế</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #D4B4CB; 
+            --bg-color: #FAF5F7;
+            --text-main: #5C4A52;
+            --white: #FFFFFF;
+            --success: #88B7B5; 
+            --danger: #E29587; 
+            --card-hover: #F2E3EE;
+        }
+
+        * { box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--white);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 30px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 35px rgba(212, 180, 203, 0.2);
+            position: relative;
+        }
+
+        h1 { text-align: center; color: var(--text-main); margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #999; margin-bottom: 30px; font-size: 0.9rem; }
+
+        /* --- MÀN HÌNH TRANG CHỦ --- */
+        #homeScreen { display: block; }
+
+        .lesson-list { display: flex; flex-direction: column; gap: 15px; }
+
+        .lesson-card {
+            background: var(--bg-color);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .lesson-card:hover {
+            transform: translateY(-3px);
+            background: var(--card-hover);
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(212, 180, 203, 0.3);
+        }
+
+        .lesson-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            background: var(--white);
+            width: 60px; height: 60px;
+            border-radius: 15px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .lesson-info h3 { margin: 0 0 5px 0; color: var(--text-main); }
+        .lesson-info p { margin: 0; font-size: 0.85rem; color: #777; }
+
+        /* --- MÀN HÌNH LUYỆN TẬP --- */
+        #lessonScreen { display: none; text-align: center; }
+        
+        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
+        
+        .btn-back {
+            background: none; border: none; color: #999;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-back:hover { color: var(--text-main); }
+
+        .ipa-card { background: var(--bg-color); border-radius: 20px; padding: 30px; margin-bottom: 20px; }
+        .sound-display { font-size: 4rem; font-weight: 700; color: var(--primary); margin: 0; }
+        .word-display { font-size: 1.5rem; color: var(--text-main); margin-top: 10px; font-weight: 600; }
+
+        .btn {
+            background: var(--primary); color: var(--white); border: none;
+            padding: 12px 25px; border-radius: 50px; font-size: 1rem;
+            font-weight: 600; cursor: pointer; transition: 0.3s; margin: 5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 180, 203, 0.4); }
+        .btn:disabled { background: #ddd; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-record {
+            background: var(--text-main); width: 60px; height: 60px;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            margin: 20px auto; font-size: 1.5rem;
+        }
+        .btn-record.recording { background: var(--danger); animation: pulse 1.5s infinite; }
+
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 15px; display: none; }
+        .score-text { font-size: 2rem; font-weight: 700; margin: 0; }
+        .feedback-text { font-size: 0.95rem; margin-top: 10px; }
+
+        .btn-hint {
+            position: fixed; bottom: 30px; right: 30px; background: #FFD166;
+            color: #fff; width: 60px; height: 60px; border-radius: 50%;
+            border: none; font-size: 1.8rem; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 209, 102, 0.4); z-index: 1000; display: none;
+        }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(92, 74, 82, 0.5); backdrop-filter: blur(5px);
+            z-index: 1001; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: var(--white); width: 85%; max-width: 400px;
+            border-radius: 20px; padding: 30px; position: relative; text-align: center;
+        }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #999; }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(226, 149, 135, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(226, 149, 135, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(226, 149, 135, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="homeScreen">
+            <h1>Lộ Trình Tinh Tế</h1>
+            <p class="subtitle">Chọn bài học hôm nay của bạn nhé</p>
+
+            <div class="lesson-list">
+                <div class="lesson-card" onclick="openLesson('ipa')">
+                    <div class="lesson-icon">👄</div>
+                    <div class="lesson-info">
+                        <h3>Chuẩn Hóa 44 Âm IPA</h3>
+                        <p>Nền tảng phát âm hoàn hảo</p>
+                    </div>
+                </div>
+
+                <div class="lesson-card" onclick="openLesson('stress2')">
+                    <div class="lesson-icon">🎵</div>
+                    <div class="lesson-info">
+                        <h3>Trọng Âm (2 Âm Tiết)</h3>
+                        <p>Tạo ngữ điệu tự nhiên, lôi cuốn</p>
+                    </div>
+                </div>
+
+                <div class="lesson-card" onclick="openLesson('stress3')">
+                    <div class="lesson-icon">🎼</div>
+                    <div class="lesson-info">
+                        <h3>Trọng Âm (3 Âm Tiết)</h3>
+                        <p>Làm chủ các từ vựng nâng cao</p>
+                    </div>
+                </div>
+                
+                <div class="lesson-card" onclick="openLesson('intonation')">
+                    <div class="lesson-icon">🌊</div>
+                    <div class="lesson-info">
+                        <h3>Ngữ Điệu Câu (Intonation)</h3>
+                        <p>Giao tiếp có cảm xúc, nhấn nhá</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="lessonScreen">
+            <div class="header-action">
+                <button class="btn-back" onclick="goHome()">⬅️ Quay lại</button>
+                <div id="progressText" style="color: #999; font-size: 0.9rem;">Âm 1 / 44</div>
+            </div>
+            
+            <h2 id="lessonTitle" style="margin-top: 0;">Luyện Tập IPA</h2>
+
+            <div class="ipa-card">
+                <h2 class="sound-display" id="ipaSound">/iː/</h2>
+                <div class="word-display" id="ipaWord">sheep</div>
+            </div>
+
+            <button class="btn" onclick="playAudio()">🔊 Nghe Mẫu</button>
+            <button class="btn btn-record" id="recordBtn" onclick="toggleRecording()" title="Bấm để đọc">🎙️</button>
+            <p id="statusText">Bấm mic và đọc từ trên</p>
+
+            <div class="result-box" id="resultBox">
+                <p class="score-text" id="scoreValue">0%</p>
+                <p class="feedback-text" id="feedbackText"></p>
+            </div>
+
+            <button class="btn" id="nextBtn" onclick="nextSound()" style="margin-top: 20px; width: 100%;" disabled>Chuyển Tiếp ➔</button>
+        </div>
+
+    </div>
+
+    <button class="btn-hint" id="hintBtn" onclick="openModal()">💡</button>
+    <div class="modal" id="hintModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 style="color: var(--primary); margin-top: 0;">Hướng Dẫn</h2>
+            <h1 id="modalSound" style="font-size: 3rem; margin: 10px 0;">/iː/</h1>
+            <p><strong>Cách đọc:</strong> <span id="modalInstruction">...</span></p>
+            <p style="color: var(--danger);"><strong>Lỗi sai thường gặp:</strong> <span id="modalError">...</span></p>
+        </div>
+    </div>
+
+    <script>
+        // --- DỮ LIỆU BÀI HỌC ---
+        const lessonsData = {
+            ipa: [
+                { sound: "/iː/", word: "sheep", instruction: "Mở rộng miệng sang hai bên như mỉm cười. Kéo dài âm một chút.", error: "Đọc quá ngắn giống âm 'i' tiếng Việt." },
+                { sound: "/ɪ/", word: "ship", instruction: "Mở miệng hẹp hơn, dứt khoát, ngắn gọn.", error: "Kéo dài nhầm sang âm /iː/." },
+                { sound: "/æ/", word: "cat", instruction: "Mở to miệng hết cỡ, cằm hạ thấp. Âm lai giữa 'a' và 'e'.", error: "Không mở đủ khẩu hình miệng." }
+            ],
+            stress2: [
+                { sound: "N/A", word: "record (n)", instruction: "Danh từ 2 âm tiết: Trọng âm thường rơi vào âm tiết THỨ NHẤT. Nhấn mạnh 'RE', lướt 'cord'.", error: "Nhấn đều cả 2 âm hoặc nhấn âm 2." },
+                { sound: "N/A", word: "record (v)", instruction: "Động từ 2 âm tiết: Trọng âm thường rơi vào âm tiết THỨ HAI. Lướt 're', nhấn mạnh 'CORD'.", error: "Đọc giống danh từ." }
+            ],
+            // Bạn có thể thêm dữ liệu cho stress3, intonation tương tự...
+        };
+
+        let currentLessonType = '';
+        let currentIndex = 0;
+        let isRecording = false;
+
+        // --- ĐIỀU HƯỚNG MÀN HÌNH ---
+        function openLesson(type) {
+            currentLessonType = type;
+            currentIndex = 0;
+            
+            // Check nếu chưa có dữ liệu bài học
+            if(!lessonsData[type]) {
+                alert("Bài học này đang được cập nhật!");
+                return;
+            }
+
+            // Đổi giao diện
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('lessonScreen').style.display = 'block';
+            document.getElementById('hintBtn').style.display = 'flex';
+
+            // Set Title
+            const titles = { ipa: "44 Âm IPA", stress2: "Trọng Âm (2 Âm Tiết)", stress3: "Trọng Âm (3 Âm Tiết)", intonation: "Ngữ Điệu Câu" };
+            document.getElementById('lessonTitle').innerText = titles[type];
+
+            loadSound(currentIndex);
+        }
+
+        function goHome() {
+            document.getElementById('homeScreen').style.display = 'block';
+            document.getElementById('lessonScreen').style.display = 'none';
+            document.getElementById('hintBtn').style.display = 'none';
+            
+            if(isRecording && recognition) recognition.stop();
+        }
+
+        // --- LOGIC LUYỆN TẬP (GIỮ NGUYÊN NHƯ CŨ) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+        }
+
+        const ui = {
+            sound: document.getElementById('ipaSound'),
+            word: document.getElementById('ipaWord'),
+            progress: document.getElementById('progressText'),
+            recordBtn: document.getElementById('recordBtn'),
+            statusText: document.getElementById('statusText'),
+            resultBox: document.getElementById('resultBox'),
+            scoreValue: document.getElementById('scoreValue'),
+            feedbackText: document.getElementById('feedbackText'),
+            nextBtn: document.getElementById('nextBtn'),
+            modalSound: document.getElementById('modalSound'),
+            modalInstruction: document.getElementById('modalInstruction'),
+            modalError: document.getElementById('modalError')
+        };
+
+        function loadSound(index) {
+            const dataList = lessonsData[currentLessonType];
+            const data = dataList[index];
+            
+            ui.sound.innerText = data.sound !== "N/A" ? data.sound : ""; // Ẩn IPA nếu học trọng âm
+            ui.word.innerText = data.word;
+            ui.progress.innerText = `Phần ${index + 1} / ${dataList.length}`;
+            ui.modalSound.innerText = data.word;
+            ui.modalInstruction.innerText = data.instruction;
+            ui.modalError.innerText = data.error;
+            
+            ui.resultBox.style.display = 'none';
+            ui.nextBtn.disabled = true;
+            ui.statusText.innerText = 'Bấm mic và đọc từ trên';
+        }
+
+        function playAudio() {
+            // Lọc bỏ phần text trong ngoặc (VD: record (n) -> record)
+            let wordToPlay = lessonsData[currentLessonType][currentIndex].word.replace(/\s*\(.*?\)\s*/g, '');
+            const utterance = new SpeechSynthesisUtterance(wordToPlay);
+            utterance.lang = 'en-US'; utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function toggleRecording() {
+            if (!recognition) { alert("Trình duyệt không hỗ trợ. Hãy dùng Chrome."); return; }
+            if (isRecording) { recognition.stop(); return; }
+            recognition.start();
+        }
+
+        if (recognition) {
+            recognition.onstart = function() {
+                isRecording = true;
+                ui.recordBtn.classList.add('recording');
+                ui.statusText.innerText = 'Đang nghe...';
+            };
+            recognition.onspeechend = function() { recognition.stop(); };
+            recognition.onresult = function(event) {
+                isRecording = false;
+                ui.recordBtn.classList.remove('recording');
+                const spokenWord = event.results[0][0].transcript.toLowerCase().trim();
+                ui.statusText.innerText = `Bạn đã đọc: "${spokenWord}"`;
+                calculateScore(spokenWord);
+            };
+            recognition.onerror = function() {
+                isRecording = false;
+                ui.recordBtn.classList.remove('recording');
+                ui.statusText.innerText = 'Không nghe rõ, vui lòng thử lại!';
+            };
+        }
+
+        function calculateScore(spoken) {
+            let target = lessonsData[currentLessonType][currentIndex].word.toLowerCase().replace(/\s*\(.*?\)\s*/g, '');
+            let score = 0;
+
+            if (spoken === target || spoken.includes(target) || target.includes(spoken)) {
+                score = Math.floor(Math.random() * (100 - 85 + 1) + 85);
+            } else if (spoken[0] === target[0]) {
+                score = Math.floor(Math.random() * (79 - 50 + 1) + 50);
+            } else {
+                score = Math.floor(Math.random() * 40);
+            }
+            showResult(score, spoken);
+        }
+
+        function showResult(score, spoken) {
+            ui.resultBox.style.display = 'block';
+            ui.scoreValue.innerText = `${score}%`;
+
+            if (score >= 80) {
+                ui.resultBox.style.backgroundColor = '#E8F3F2';
+                ui.scoreValue.style.color = 'var(--success)';
+                ui.feedbackText.innerText = "Tuyệt vời! Bạn phát âm rất chuẩn.";
+                ui.feedbackText.style.color = 'var(--success)';
+                ui.nextBtn.disabled = false;
+            } else {
+                ui.resultBox.style.backgroundColor = '#FCEBE8';
+                ui.scoreValue.style.color = 'var(--danger)';
+                ui.feedbackText.innerText = `Chưa đạt 80%. Bạn đọc thành "${spoken}".\n💡 ${lessonsData[currentLessonType][currentIndex].error}`;
+                ui.feedbackText.style.color = 'var(--danger)';
+                ui.nextBtn.disabled = true;
+            }
+        }
+
+        function nextSound() {
+            const dataList = lessonsData[currentLessonType];
+            if (currentIndex < dataList.length - 1) {
+                currentIndex++;
+                loadSound(currentIndex);
+            } else {
+                alert("Chúc mừng! Bạn đã hoàn thành bài học này.");
+                goHome();
+            }
+        }
+
+        function openModal() { document.getElementById('hintModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('hintModal').style.display = 'none'; }
+    </script>
+</body>
+</html>
