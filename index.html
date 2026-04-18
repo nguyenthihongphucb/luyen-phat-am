@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnapEnglish - Pronunciation </title>
+    <title>SnapEnglish - Pronunciation</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -199,7 +199,7 @@
     </div>
 
     <script>
-        // --- DỮ LIỆU BÀI HỌC (ĐÃ ĐƯỢC TỐI ƯU HÓA DATA ĐỂ KHÔNG NẶNG MÁY) ---
+        // --- DỮ LIỆU BÀI HỌC ---
         const lessonsData = {
             vowel_i: { 
                 title: "Nguyên âm ngắn và dài ɪ - iː", icon: "🎯", 
@@ -352,9 +352,11 @@
             }
         };
 
+        // --- KHỞI TẠO BIẾN ---
         let currentLessonKey = '';
         let currentIndex = 0;
         let isRecording = false;
+        let recognitionTimeout = null;
 
         // --- KHỞI TẠO MÀN HÌNH CHÍNH ---
         function renderHome() {
@@ -389,7 +391,6 @@
 
             document.getElementById('lessonTitle').innerText = lessonsData[key].title;
             
-            // Cập nhật hướng dẫn Modal
             document.getElementById('modalInstruction').innerText = lessonsData[key].inst;
             document.getElementById('modalError').innerText = lessonsData[key].err;
 
@@ -403,16 +404,14 @@
             if(isRecording && recognition) recognition.stop();
         }
 
-      // --- LOGIC LUYỆN TẬP CHUYÊN NGHIỆP ---
+        // --- CẤU HÌNH NHẬN DIỆN GIỌNG NÓI ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
-        let isRecording = false;
-        let recognitionTimeout = null; // Bộ đếm giờ chống treo mic
 
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
-            recognition.interimResults = true; // BẬT TÍNH NĂNG: Hiện chữ ngay khi đang nói
+            recognition.interimResults = true; 
             recognition.continuous = false;
             recognition.maxAlternatives = 1;
         }
@@ -433,9 +432,8 @@
         function resetMicUI(message = 'Đã dừng mic. Bấm để thử lại!') {
             isRecording = false;
             ui.recordBtn.classList.remove('recording');
-            clearTimeout(recognitionTimeout); // Xóa bộ đếm giờ
+            clearTimeout(recognitionTimeout); 
             
-            // Chỉ đổi text nếu hệ thống đang ở trạng thái chờ/treo
             if (ui.statusText.innerText.includes('Đang') || ui.statusText.innerText === '') {
                 ui.statusText.innerText = message;
             }
@@ -454,7 +452,7 @@
             ui.nextBtn.disabled = true;
             ui.statusText.innerText = 'Bấm mic và đọc từ trên';
             
-            if (isRecording && recognition) recognition.stop(); // Ngắt mic nếu qua từ mới
+            if (isRecording && recognition) recognition.stop(); 
         }
 
         function playAudio() {
@@ -465,7 +463,7 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // --- CẬP NHẬT LẠI NÚT THU ÂM ---
+        // --- ĐIỀU KHIỂN NÚT THU ÂM ---
         function toggleRecording() {
             if (!recognition) { alert("Trình duyệt không hỗ trợ. Hãy dùng Google Chrome hoặc Edge."); return; }
             
@@ -476,7 +474,7 @@
             }
             
             try {
-                ui.resultBox.style.display = 'none'; // Ẩn điểm cũ
+                ui.resultBox.style.display = 'none'; 
                 recognition.start();
             } catch (e) {
                 console.warn("Lỗi khởi động mic:", e);
@@ -491,7 +489,6 @@
                 ui.recordBtn.classList.add('recording');
                 ui.statusText.innerText = 'Đang bật mic...';
 
-                // WATCHDOG Tự động tắt sau 6 giây nếu mic bị treo / không bắt được tiếng
                 clearTimeout(recognitionTimeout);
                 recognitionTimeout = setTimeout(() => {
                     if (isRecording) {
@@ -501,19 +498,16 @@
                 }, 6000);
             };
 
-            // Khi thực sự bắt đầu nghe thấy âm thanh 
             recognition.onaudiostart = function() {
                 ui.statusText.innerText = 'Đang nghe... Hãy nói ngay!';
             };
 
-            // Khi nhận diện được luồng âm thanh thời gian thực
             recognition.onresult = function(event) {
-                clearTimeout(recognitionTimeout); // Có âm thanh -> Hủy tự động tắt
+                clearTimeout(recognitionTimeout); 
 
                 let interimTranscript = '';
                 let finalTranscript = '';
 
-                // Phân loại kết quả tạm thời và kết quả chốt
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
                         finalTranscript += event.results[i][0].transcript;
@@ -522,12 +516,10 @@
                     }
                 }
 
-                // Hiển thị chữ chạy theo thời gian thực (Giống app xịn)
                 if (interimTranscript) {
                     ui.statusText.innerText = `Đang nghe: "${interimTranscript}..."`;
                 }
 
-                // Khi chốt được từ cuối cùng
                 if (finalTranscript) {
                     const spokenWord = finalTranscript.toLowerCase().trim();
                     ui.statusText.innerText = `Bạn đã đọc: "${spokenWord}"`;
@@ -535,13 +527,10 @@
                 }
             };
 
-            // Khi kết thúc toàn bộ phiên nghe
             recognition.onend = function() {
-                // Đảm bảo UI luôn được reset khi mic tắt dù vì lý do gì
                 resetMicUI('Không nhận diện được từ, bạn thử lại nhé!');
             };
 
-            // Bắt lỗi chuyên sâu
             recognition.onerror = function(event) {
                 let errorMsg = 'Lỗi mic, vui lòng thử lại.';
                 switch(event.error) {
@@ -554,62 +543,7 @@
             };
         }
 
-        function playAudio() {
-            const wordToPlay = lessonsData[currentLessonKey].words[currentIndex];
-            const utterance = new SpeechSynthesisUtterance(wordToPlay);
-            utterance.lang = 'en-US'; 
-            utterance.rate = 0.85;
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // --- CẬP NHẬT LẠI NÚT THU ÂM ---
-        function toggleRecording() {
-            if (!recognition) { alert("Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome."); return; }
-            
-            if (isRecording) { 
-                recognition.stop(); 
-                resetMicUI(); // Ép tắt ngay lập tức trên giao diện
-                return; 
-            }
-            
-            try {
-                recognition.start();
-            } catch (e) {
-                // Bắt lỗi nếu người dùng bấm đúp quá nhanh
-                console.log("Mic đang được khởi động...");
-            }
-        }
-
-        if (recognition) {
-            recognition.onstart = function() {
-                isRecording = true;
-                ui.recordBtn.classList.add('recording');
-                ui.statusText.innerText = 'Đang nghe...';
-            };
-            
-            recognition.onresult = function(event) {
-                const spokenWord = event.results[0][0].transcript.toLowerCase().trim();
-                ui.statusText.innerText = `Bạn đã đọc: "${spokenWord}"`;
-                calculateScore(spokenWord);
-            };
-
-            // Thêm sự kiện onend: Bất kể vì lý do gì mic tắt (đọc xong, lỗi, tự bấm dừng), đều phải reset UI
-            recognition.onend = function() {
-                resetMicUI();
-            };
-
-            recognition.onerror = function(event) {
-                if (event.error === 'no-speech') {
-                    ui.statusText.innerText = 'Không nghe thấy âm thanh. Hãy thử lại!';
-                } else if (event.error === 'not-allowed') {
-                    ui.statusText.innerText = 'Bạn chưa cấp quyền sử dụng Micro!';
-                } else {
-                    ui.statusText.innerText = 'Có lỗi xảy ra, vui lòng thử lại.';
-                }
-                resetMicUI();
-            };
-        }
-
+        // --- TÍNH ĐIỂM ---
         function calculateScore(spoken) {
             let target = lessonsData[currentLessonKey].words[currentIndex].toLowerCase().replace(/[.,?!]/g, '');
             let spokenClean = spoken.replace(/[.,?!]/g, '');
@@ -655,6 +589,7 @@
             }
         }
 
+        // --- MODAL ---
         function openModal() { document.getElementById('hintModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('hintModal').style.display = 'none'; }
 
