@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master English - Lộ Trình Tinh Tế</title>
+    <title>SnapEnglish - Pronunciation </title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -410,6 +410,7 @@
             recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
             recognition.interimResults = false;
+            recognition.continuous = false; // Đảm bảo chỉ nghe 1 lần rồi tự tắt
         }
 
         const ui = {
@@ -424,6 +425,16 @@
             nextBtn: document.getElementById('nextBtn')
         };
 
+        // Hàm hỗ trợ reset giao diện Mic
+        function resetMicUI() {
+            isRecording = false;
+            ui.recordBtn.classList.remove('recording');
+            if (ui.statusText.innerText === 'Đang nghe...') {
+                ui.statusText.innerText = 'Đã dừng mic. Bấm lại để đọc!';
+            }
+        }
+
+        // --- CÁC HÀM XỬ LÝ (Load Word, Play Audio giữ nguyên) ---
         function loadWord() {
             const currentLesson = lessonsData[currentLessonKey];
             const currentWord = currentLesson.words[currentIndex];
@@ -435,6 +446,7 @@
             ui.resultBox.style.display = 'none';
             ui.nextBtn.disabled = true;
             ui.statusText.innerText = 'Bấm mic và đọc từ trên';
+            resetMicUI(); // Đảm bảo mic tắt khi chuyển từ mới
         }
 
         function playAudio() {
@@ -445,10 +457,22 @@
             window.speechSynthesis.speak(utterance);
         }
 
+        // --- CẬP NHẬT LẠI NÚT THU ÂM ---
         function toggleRecording() {
             if (!recognition) { alert("Trình duyệt không hỗ trợ nhận diện giọng nói. Hãy dùng Google Chrome."); return; }
-            if (isRecording) { recognition.stop(); return; }
-            recognition.start();
+            
+            if (isRecording) { 
+                recognition.stop(); 
+                resetMicUI(); // Ép tắt ngay lập tức trên giao diện
+                return; 
+            }
+            
+            try {
+                recognition.start();
+            } catch (e) {
+                // Bắt lỗi nếu người dùng bấm đúp quá nhanh
+                console.log("Mic đang được khởi động...");
+            }
         }
 
         if (recognition) {
@@ -457,18 +481,27 @@
                 ui.recordBtn.classList.add('recording');
                 ui.statusText.innerText = 'Đang nghe...';
             };
-            recognition.onspeechend = function() { recognition.stop(); };
+            
             recognition.onresult = function(event) {
-                isRecording = false;
-                ui.recordBtn.classList.remove('recording');
                 const spokenWord = event.results[0][0].transcript.toLowerCase().trim();
                 ui.statusText.innerText = `Bạn đã đọc: "${spokenWord}"`;
                 calculateScore(spokenWord);
             };
-            recognition.onerror = function() {
-                isRecording = false;
-                ui.recordBtn.classList.remove('recording');
-                ui.statusText.innerText = 'Không nghe rõ, vui lòng thử lại!';
+
+            // Thêm sự kiện onend: Bất kể vì lý do gì mic tắt (đọc xong, lỗi, tự bấm dừng), đều phải reset UI
+            recognition.onend = function() {
+                resetMicUI();
+            };
+
+            recognition.onerror = function(event) {
+                if (event.error === 'no-speech') {
+                    ui.statusText.innerText = 'Không nghe thấy âm thanh. Hãy thử lại!';
+                } else if (event.error === 'not-allowed') {
+                    ui.statusText.innerText = 'Bạn chưa cấp quyền sử dụng Micro!';
+                } else {
+                    ui.statusText.innerText = 'Có lỗi xảy ra, vui lòng thử lại.';
+                }
+                resetMicUI();
             };
         }
 
